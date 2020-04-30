@@ -24,6 +24,13 @@
 package org.ta4j.core.indicators.ichimoku;
 
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
+import org.ta4j.core.indicators.CachedIndicator;
+import org.ta4j.core.indicators.helpers.HighPriceIndicator;
+import org.ta4j.core.indicators.helpers.HighestValueIndicator;
+import org.ta4j.core.indicators.helpers.LowPriceIndicator;
+import org.ta4j.core.indicators.helpers.LowestValueIndicator;
+import org.ta4j.core.num.Num;
 
 /**
  * Ichimoku clouds: Senkou Span B (Leading Span B) indicator
@@ -32,7 +39,16 @@ import org.ta4j.core.BarSeries;
  *      "http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:ichimoku_cloud">
  *      http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:ichimoku_cloud</a>
  */
-public class IchimokuSenkouSpanBIndicator extends AbstractIchimokuLineIndicator {
+public class IchimokuSenkouSpanBIndicator extends CachedIndicator<Num> {
+
+    /** The period high */
+    private final Indicator<Num> periodHigh;
+
+    /** The period low */
+    private final Indicator<Num> periodLow;
+
+    /** The time lead */
+    private final int timeLead;
 
     /**
      * Constructor.
@@ -40,7 +56,7 @@ public class IchimokuSenkouSpanBIndicator extends AbstractIchimokuLineIndicator 
      * @param series the series
      */
     public IchimokuSenkouSpanBIndicator(BarSeries series) {
-        super(series, 52);
+        this(series, 52, 26);
     }
 
     /**
@@ -48,9 +64,19 @@ public class IchimokuSenkouSpanBIndicator extends AbstractIchimokuLineIndicator 
      * 
      * @param series   the series
      * @param barCount the time frame (usually 52)
+     * @param timeLead the time lead (usually 26)
      */
-    public IchimokuSenkouSpanBIndicator(BarSeries series, int barCount) {
-        super(series, barCount);
+    public IchimokuSenkouSpanBIndicator(BarSeries series, int barCount, int timeLead) {
+        super(series);
+        periodHigh = new HighestValueIndicator(new HighPriceIndicator(series), barCount);
+        periodLow = new LowestValueIndicator(new LowPriceIndicator(series), barCount);
+        this.timeLead = timeLead;
+    }
+
+    @Override
+    protected Num calculate(int index) {
+        int spanIndex = index - timeLead;
+        return periodHigh.getValue(spanIndex).plus(periodLow.getValue(spanIndex)).dividedBy(numOf(2));
     }
 
 }
