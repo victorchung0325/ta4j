@@ -43,12 +43,17 @@ public class IchimokuSenkouSpanAIndicator extends CachedIndicator<Num> {
     private final IchimokuKijunSenIndicator baseLine;
 
     /**
+     * The time lead
+     */
+    private final int timeLead;
+
+    /**
      * Constructor.
      * 
      * @param series the series
      */
     public IchimokuSenkouSpanAIndicator(BarSeries series) {
-        this(series, new IchimokuTenkanSenIndicator(series), new IchimokuKijunSenIndicator(series));
+        this(series, new IchimokuTenkanSenIndicator(series), new IchimokuKijunSenIndicator(series), 26);
     }
 
     /**
@@ -58,10 +63,11 @@ public class IchimokuSenkouSpanAIndicator extends CachedIndicator<Num> {
      * @param barCountConversionLine the time frame for the conversion line (usually
      *                               9)
      * @param barCountBaseLine       the time frame for the base line (usually 26)
+     * @param timeLead the time lead (usually 26)
      */
-    public IchimokuSenkouSpanAIndicator(BarSeries series, int barCountConversionLine, int barCountBaseLine) {
+    public IchimokuSenkouSpanAIndicator(BarSeries series, int barCountConversionLine, int barCountBaseLine, int timeLead) {
         this(series, new IchimokuTenkanSenIndicator(series, barCountConversionLine),
-                new IchimokuKijunSenIndicator(series, barCountBaseLine));
+                new IchimokuKijunSenIndicator(series, barCountBaseLine), timeLead);
     }
 
     /**
@@ -70,16 +76,19 @@ public class IchimokuSenkouSpanAIndicator extends CachedIndicator<Num> {
      * @param series         the series
      * @param conversionLine the conversion line
      * @param baseLine       the base line
+     * @param timeLead the time lead (usually 26)
      */
     public IchimokuSenkouSpanAIndicator(BarSeries series, IchimokuTenkanSenIndicator conversionLine,
-            IchimokuKijunSenIndicator baseLine) {
+            IchimokuKijunSenIndicator baseLine, int timeLead) {
         super(series);
         this.conversionLine = conversionLine;
         this.baseLine = baseLine;
+        this.timeLead = timeLead;
     }
 
     @Override
     protected Num calculate(int index) {
-        return conversionLine.getValue(index).plus(baseLine.getValue(index)).dividedBy(numOf(2));
+        int spanIndex = index - timeLead;
+        return conversionLine.getValue(spanIndex).plus(baseLine.getValue(spanIndex)).dividedBy(numOf(2));
     }
 }
